@@ -42,7 +42,7 @@ To find these values:
 1. Go to your Supabase project dashboard
 2. Navigate to **Project Settings > API**
 3. Copy the **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
-4. Copy the **anon / public** key → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+4. Copy the **publishable** key → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 5. Copy the **service_role / secret** key → `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY`
 
 > The service role key is only needed to seed the admin account. Never expose it to the client in production.
@@ -53,6 +53,7 @@ To find these values:
 2. Open and run the file [`supabase/migrations/001_create_profiles.sql`](supabase/migrations/001_create_profiles.sql)
 
 This creates:
+
 - The `profiles` table (id, name, email, role, xp)
 - Row Level Security policies
 - A trigger that auto-creates a profile when a new user signs up
@@ -101,4 +102,3 @@ Use the **Sign Up** tab on the home page to register a new student account. The 
 - [Next.js](https://nextjs.org/) — React framework
 - [Supabase](https://supabase.com/) — Authentication & database
 - [Tailwind CSS](https://tailwindcss.com/) — Styling
-- [Radix UI](https://www.radix-ui.com/) — UI primitives

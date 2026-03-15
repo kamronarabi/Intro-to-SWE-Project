@@ -65,14 +65,30 @@ export function AuthModal() {
           throw new Error("Passwords do not match");
         }
 
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { name, role: "student" },
           },
         });
-        if (signUpError) throw signUpError;
+        if (signUpError) {
+          // Provide a friendlier message for duplicate email
+          if (signUpError.message.toLowerCase().includes("already registered")) {
+            throw new Error("An account with this email already exists. Please log in instead.");
+          }
+          throw signUpError;
+        }
+
+        // If Supabase returns a user with an empty session and identities is empty,
+        // it means the email is already taken (email confirmation disabled case)
+        if (
+          signUpData.user &&
+          signUpData.user.identities &&
+          signUpData.user.identities.length === 0
+        ) {
+          throw new Error("An account with this email already exists. Please log in instead.");
+        }
 
         router.push("/student");
         router.refresh();
