@@ -47,17 +47,23 @@ To find these values:
 
 > The service role key is only needed to seed the admin account. Never expose it to the client in production.
 
-### 5. Run the database migration
+### 5. Run the database migrations
 
-1. In your Supabase dashboard, go to **SQL Editor**
-2. Open and run the file [`supabase/migrations/001_create_profiles.sql`](supabase/migrations/001_create_profiles.sql)
+In your Supabase dashboard, go to **SQL Editor** and run the following files **in order**:
 
-This creates:
+1. [`supabase/migrations/001_create_profiles.sql`](supabase/migrations/001_create_profiles.sql) — creates:
+   - The `profiles` table (id, name, email, role, xp)
+   - Row Level Security policies
+   - A trigger that auto-creates a profile when a new user signs up
+   - A helper `is_admin()` function for admin-level RLS policies
 
-- The `profiles` table (id, name, email, role, xp)
-- Row Level Security policies
-- A trigger that auto-creates a profile when a new user signs up
-- A helper `is_admin()` function for admin-level RLS policies
+2. [`supabase/migrations/002_create_tasks.sql`](supabase/migrations/002_create_tasks.sql) — creates:
+   - The `tasks` table (title, description, xp_value, repeatable flag)
+   - The `student_tasks` table (tracks task assignments and completions per student)
+   - An `increment_xp()` RPC function for atomic XP updates
+   - Additional RLS policies for tasks, student tasks, and admin access
+   - Enables Realtime on `profiles` for a live leaderboard
+   - Seeds the database with starter tasks
 
 ### 6. Start the dev server
 
@@ -97,8 +103,16 @@ Use the **Sign Up** tab on the home page to register a new student account. The 
 | `npm run start` | Start the production server  |
 | `npm run lint`  | Run ESLint                   |
 
+## Features
+
+- **Role-based dashboards** — Admins and students see different views after signing in
+- **Task system** — Admins create tasks; students complete or discard them to earn XP
+- **Live leaderboard** — Student rankings update in real time via Supabase Realtime
+- **XP tracking** — Atomic XP increments with optimistic UI updates
+
 ## Tech Stack
 
 - [Next.js](https://nextjs.org/) — React framework
-- [Supabase](https://supabase.com/) — Authentication & database
+- [Supabase](https://supabase.com/) — Authentication, database & Realtime
 - [Tailwind CSS](https://tailwindcss.com/) — Styling
+- [shadcn/ui](https://ui.shadcn.com/) — UI components

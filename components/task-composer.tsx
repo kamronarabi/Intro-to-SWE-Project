@@ -1,0 +1,132 @@
+"use client";
+
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus } from "lucide-react";
+
+export function TaskComposer({ onTaskCreated }: { onTaskCreated?: () => void }) {
+  const supabase = createClient();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [xpValue, setXpValue] = useState(25);
+  const [isRepeatable, setIsRepeatable] = useState(false);
+  const [maxCompletions, setMaxCompletions] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim()) return;
+
+    setIsSubmitting(true);
+    setError("");
+
+    const { error: insertError } = await supabase.from("tasks").insert({
+      title: title.trim(),
+      description: description.trim(),
+      xp_value: xpValue,
+      is_repeatable: isRepeatable,
+      max_completions: isRepeatable ? maxCompletions : 1,
+    });
+
+    if (insertError) {
+      setError(insertError.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Reset form
+    setTitle("");
+    setDescription("");
+    setXpValue(25);
+    setIsRepeatable(false);
+    setMaxCompletions(1);
+    setIsSubmitting(false);
+    onTaskCreated?.();
+  }
+
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Plus className="h-5 w-5" />
+          Create Task
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Task Name</Label>
+            <Input
+              id="title"
+              placeholder="e.g. Complete a LeetCode problem"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Describe what the student needs to do..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <div className="flex gap-4">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="xp">XP Value</Label>
+              <Input
+                id="xp"
+                type="number"
+                min={1}
+                max={1000}
+                value={xpValue}
+                onChange={(e) => setXpValue(Number(e.target.value))}
+              />
+            </div>
+
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="repeatable">Repeatable</Label>
+              <div className="flex items-center gap-3 pt-1.5">
+                <input
+                  id="repeatable"
+                  type="checkbox"
+                  checked={isRepeatable}
+                  onChange={(e) => setIsRepeatable(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                {isRepeatable && (
+                  <Input
+                    type="number"
+                    min={2}
+                    max={100}
+                    value={maxCompletions}
+                    onChange={(e) => setMaxCompletions(Number(e.target.value))}
+                    placeholder="Max times"
+                    className="w-24"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <Button type="submit" disabled={isSubmitting || !title.trim()} className="w-full">
+            {isSubmitting ? "Creating..." : "Create Task"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}

@@ -13,11 +13,23 @@ interface Profile {
 
 interface LeaderboardProps {
   currentUserId: string;
+  currentUserXp?: number;
 }
 
-export function Leaderboard({ currentUserId }: LeaderboardProps) {
+export function Leaderboard({ currentUserId, currentUserXp }: LeaderboardProps) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const supabase = createClient();
+
+  // Optimistically update current user's XP so leaderboard reflects it instantly
+  useEffect(() => {
+    if (currentUserXp === undefined) return;
+    setProfiles((prev) => {
+      const updated = prev.map((p) =>
+        p.id === currentUserId ? { ...p, xp: currentUserXp } : p,
+      );
+      return updated.sort((a, b) => b.xp - a.xp);
+    });
+  }, [currentUserXp, currentUserId]);
 
   useEffect(() => {
     async function fetchProfiles() {

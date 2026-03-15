@@ -17,8 +17,8 @@ export default function StudentPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
   const [userXp, setUserXp] = useState(0);
-  const [currentTask, setCurrentTask] = useState<Task | null>(null);
-  const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [pendingTaskIds, setPendingTaskIds] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [noTasksLeft, setNoTasksLeft] = useState(false);
 
@@ -47,8 +47,8 @@ export default function StudentPage() {
     loadUser();
   }, []);
 
-  // Task assignment algorithm
-  const getNextTask = useCallback(async () => {
+  // Load all eligible tasks
+  const loadTasks = useCallback(async () => {
     if (!userId) return;
 
     setIsLoading(true);
@@ -57,7 +57,7 @@ export default function StudentPage() {
     // Fetch all tasks
     const { data: allTasks } = await supabase.from("tasks").select("*");
     if (!allTasks || allTasks.length === 0) {
-      setCurrentTask(null);
+      setTasks([]);
       setNoTasksLeft(true);
       setIsLoading(false);
       return;
@@ -73,12 +73,6 @@ export default function StudentPage() {
 
     // Filter eligible tasks
     const eligible = allTasks.filter((task) => {
-      // Skip tasks with a pending assignment
-      const hasPending = history.some(
-        (st) => st.task_id === task.id && st.status === "pending",
-      );
-      if (hasPending) return false;
-
       // Count completions for this task
       const completions = history.filter(
         (st) => st.task_id === task.id && st.status === "completed",
@@ -88,65 +82,88 @@ export default function StudentPage() {
     });
 
     if (eligible.length === 0) {
-      setCurrentTask(null);
-      setPendingTaskId(null);
+      setTasks([]);
+      setPendingTaskIds({});
       setNoTasksLeft(true);
       setIsLoading(false);
       return;
     }
 
-    // Pick a random eligible task
-    const picked = eligible[Math.floor(Math.random() * eligible.length)];
+    // Create pending student_task records for tasks that don't already have one
+    const newPendingIds: Record<string, string> = {};
 
-    // Create a pending student_task record
-    const { data: newStudentTask } = await supabase
-      .from("student_tasks")
-      .insert({ student_id: userId, task_id: picked.id, status: "pending" })
-      .select("id")
-      .single();
+    for (const task of eligible) {
+      const existingPending = history.find(
+        (st) => st.task_id === task.id && st.status === "pending",
+      );
 
-    setCurrentTask(picked);
-    setPendingTaskId(newStudentTask?.id || null);
+      if (existingPending) {
+        newPendingIds[task.id] = existingPending.id;
+      } else {
+        const { data: newStudentTask } = await supabase
+          .from("student_tasks")
+          .insert({ student_id: userId, task_id: task.id, status: "pending" })
+          .select("id")
+          .single();
+
+        if (newStudentTask) {
+          newPendingIds[task.id] = newStudentTask.id;
+        }
+      }
+    }
+
+    setTasks(eligible);
+    setPendingTaskIds(newPendingIds);
     setIsLoading(false);
   }, [userId, supabase]);
 
-  // Load first task once user is known
+  // Load tasks once user is known
   useEffect(() => {
-    if (userId) getNextTask();
-  }, [userId, getNextTask]);
+    if (userId) loadTasks();
+  }, [userId, loadTasks]);
 
-  async function handleComplete() {
-    if (!pendingTaskId || !currentTask || !userId) return;
-    setIsLoading(true);
+  async function handleComplete(task: Task) {
+    const stId = pendingTaskIds[task.id];
+    if (!stId || !userId) return;
 
     // Mark task as completed
     await supabase
       .from("student_tasks")
       .update({ status: "completed", completed_at: new Date().toISOString() })
-      .eq("id", pendingTaskId);
+      .eq("id", stId);
 
     // Atomically increment XP
-    await supabase.rpc("increment_xp", { amount: currentTask.xp_value });
+    await supabase.rpc("increment_xp", { amount: task.xp_value });
 
     // Update local XP display
-    setUserXp((prev) => prev + currentTask.xp_value);
+    setUserXp((prev) => prev + task.xp_value);
 
-    // Load next task
-    await getNextTask();
+    // Remove from list and reload
+    setTasks((prev) => prev.filter((t) => t.id !== task.id));
+    setPendingTaskIds((prev) => {
+      const next = { ...prev };
+      delete next[task.id];
+      return next;
+    });
   }
 
-  async function handleDiscard() {
-    if (!pendingTaskId) return;
-    setIsLoading(true);
+  async function handleDiscard(task: Task) {
+    const stId = pendingTaskIds[task.id];
+    if (!stId) return;
 
     // Mark task as discarded
     await supabase
       .from("student_tasks")
       .update({ status: "discarded" })
-      .eq("id", pendingTaskId);
+      .eq("id", stId);
 
-    // Load next task
-    await getNextTask();
+    // Remove from list
+    setTasks((prev) => prev.filter((t) => t.id !== task.id));
+    setPendingTaskIds((prev) => {
+      const next = { ...prev };
+      delete next[task.id];
+      return next;
+    });
   }
 
   return (
@@ -174,9 +191,9 @@ export default function StudentPage() {
         <div className="flex flex-col items-start gap-8 lg:flex-row">
           {/* Task section */}
           <section className="flex w-full flex-col items-center gap-4 lg:w-1/2">
-            <h2 className="self-start text-lg font-semibold">Your Task</h2>
-            {isLoading && !currentTask ? (
-              <p className="text-sm text-muted-foreground">Loading task...</p>
+            <h2 className="self-start text-lg font-semibold">Your Tasks</h2>
+            {isLoading && tasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Loading tasks...</p>
             ) : noTasksLeft ? (
               <div className="w-full max-w-md rounded-xl border p-8 text-center">
                 <p className="text-lg font-medium">All caught up!</p>
@@ -184,20 +201,25 @@ export default function StudentPage() {
                   No more tasks available. Check back later!
                 </p>
               </div>
-            ) : currentTask ? (
-              <TaskCard
-                task={currentTask}
-                onComplete={handleComplete}
-                onDiscard={handleDiscard}
-                isLoading={isLoading}
-              />
-            ) : null}
+            ) : (
+              <div className="flex w-full flex-col gap-4">
+                {tasks.slice(0, 3).map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onComplete={() => handleComplete(task)}
+                    onDiscard={() => handleDiscard(task)}
+                    isLoading={isLoading}
+                  />
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Leaderboard section */}
           <section className="flex w-full flex-col items-center gap-4 lg:w-1/2">
             <h2 className="self-start text-lg font-semibold">Leaderboard</h2>
-            {userId && <Leaderboard currentUserId={userId} />}
+            {userId && <Leaderboard currentUserId={userId} currentUserXp={userXp} />}
           </section>
         </div>
       </main>
