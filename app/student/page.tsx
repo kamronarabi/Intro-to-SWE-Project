@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { SignOutButton } from "@/components/sign-out-button";
 import { TaskCard, type Task } from "@/components/task-card";
 import { Leaderboard } from "@/components/leaderboard";
 
@@ -167,27 +166,18 @@ export default function StudentPage() {
   }
 
   return (
-    <div className="min-h-svh bg-background">
-      {/* Header */}
+    <>
+      {/* Header with XP */}
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-2xl font-bold">LevelUp</h1>
-            <p className="text-sm text-muted-foreground">
-              {userName ? `Welcome, ${userName}` : "Student Dashboard"}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-semibold">
-              {userXp} XP
-            </div>
-            <SignOutButton />
+          <h1 className="text-2xl font-bold">Your Dashboard</h1>
+          <div className="rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-semibold">
+            {userXp} XP
           </div>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <div className="mx-auto w-full max-w-5xl px-6 py-8">
         <div className="flex flex-col items-start gap-8 lg:flex-row">
           {/* Task section */}
           <section className="flex w-full flex-col items-center gap-4 lg:w-1/2">
@@ -222,7 +212,7 @@ export default function StudentPage() {
             {userId && <Leaderboard currentUserId={userId} currentUserXp={userXp} />}
           </section>
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }
