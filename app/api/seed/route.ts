@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { runMigrations } from "@/lib/setup-migrations";
 
 // This route seeds a test admin account.
 // Requires SUPABASE_SERVICE_ROLE_KEY in your .env file.
@@ -24,6 +25,28 @@ export async function GET() {
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
+  // Run migrations first
+  const migrationResult = await runMigrations(supabase);
+  console.log("Migration result:", migrationResult);
+
+  // If migrations failed, provide helpful error message
+  if (!migrationResult.success && migrationResult.migration_sql) {
+    return NextResponse.json({
+      warning: "Migrations not applied",
+      message: migrationResult.message,
+      instructions: migrationResult.instructions,
+      migration_sql: migrationResult.migration_sql,
+      next_steps: [
+        "1. Go to https://supabase.com/dashboard",
+        "2. Select your project",
+        "3. Click SQL Editor",
+        "4. Paste the SQL from 'migration_sql' above",
+        "5. Click Run",
+        "6. Refresh this page",
+      ],
+    });
+  }
+
   // Check if profile already exists
   const { data: existingProfile } = await supabase
     .from("profiles")
@@ -32,7 +55,10 @@ export async function GET() {
     .single();
 
   if (existingProfile) {
-    return NextResponse.json({ message: "Admin account already exists" });
+    return NextResponse.json({
+      message: "Admin account already exists",
+      migrations: migrationResult,
+    });
   }
 
   // Check if the auth user already exists (e.g. from a previous failed seed)
@@ -75,8 +101,9 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    message: "Test admin created",
+    message: "Test admin created and migrations applied",
     email: ADMIN_EMAIL,
     password: ADMIN_PASSWORD,
+    migrations: migrationResult,
   });
 }

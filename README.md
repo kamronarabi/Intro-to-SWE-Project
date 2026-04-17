@@ -65,6 +65,13 @@ In your Supabase dashboard, go to **SQL Editor** and run the following files **i
    - Enables Realtime on `profiles` for a live leaderboard
    - Seeds the database with starter tasks
 
+3. [`supabase/migrations/003_create_applications.sql`](supabase/migrations/003_create_applications.sql) — creates:
+   - The `applications` table (company_name, role, application_date, status, notes)
+   - Row Level Security policies so students can only manage their own job/internship applications
+   - Enables the Job Applications feature in the student dashboard
+
+**Automated Migration Check**: When you visit `/api/seed`, the application automatically checks if migrations have been applied and provides the SQL if needed.
+
 ### 6. Start the dev server
 
 ```bash
