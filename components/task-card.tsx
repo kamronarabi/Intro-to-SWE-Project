@@ -23,13 +23,11 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onComplete, onDiscard, isLoading }: TaskCardProps) {
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{task.title}</CardTitle>
-          <Badge variant="secondary" className="text-sm">
-            +{task.xp_value} XP
-          </Badge>
+          <span className="xp-badge text-xs">+{task.xp_value} XP</span>
         </div>
         <CardDescription>{task.description}</CardDescription>
       </CardHeader>
@@ -45,7 +43,7 @@ export function TaskCard({ task, onComplete, onDiscard, isLoading }: TaskCardPro
         <Button
           onClick={onComplete}
           disabled={isLoading}
-          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <Check className="h-4 w-4" />
           Complete
