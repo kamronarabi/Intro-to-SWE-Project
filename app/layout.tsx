@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
-
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
   title: "LevelUp",
-  description: "LevelUp",
+  description: "A platform to help actually land a job.",
 };
 
 const geistSans = Geist({
@@ -24,9 +20,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning className={`${geistSans.className} antialiased`}>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

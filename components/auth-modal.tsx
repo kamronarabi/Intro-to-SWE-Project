@@ -13,13 +13,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToaster } from "@/components/providers";
 
 type Tab = "admin" | "student";
 type Mode = "login" | "signup";
 
-export function AuthModal() {
-  const [tab, setTab] = useState<Tab>("student");
-  const [mode, setMode] = useState<Mode>("login");
+interface AuthModalProps {
+  initialTab?: Tab;
+  initialMode?: Mode;
+}
+
+export function AuthModal({ initialTab = "student", initialMode = "login" }: AuthModalProps) {
+  const [tab, setTab] = useState<Tab>(initialTab);
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,6 +33,7 @@ export function AuthModal() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const toaster = useToaster();
 
   const resetForm = () => {
     setName("");
@@ -90,6 +97,11 @@ export function AuthModal() {
           throw new Error("An account with this email already exists. Please log in instead.");
         }
 
+        toaster.current?.show({
+          title: "Account Created",
+          message: `Welcome to LevelUp, ${name}!`,
+          variant: "success",
+        });
         router.push("/student");
         router.refresh();
       } else {
@@ -110,6 +122,11 @@ export function AuthModal() {
         if (profileError) throw profileError;
         if (!profile) throw new Error("Profile not found. Please contact an administrator.");
 
+        toaster.current?.show({
+          title: "Welcome back",
+          message: "Signed in successfully.",
+          variant: "success",
+        });
         router.push(profile.role === "admin" ? "/admin" : "/student");
         router.refresh();
       }

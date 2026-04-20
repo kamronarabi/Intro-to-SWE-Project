@@ -96,15 +96,24 @@ export function TaskComposer({ onTaskCreated }: { onTaskCreated?: () => void }) 
             </div>
 
             <div className="flex-1 space-y-2">
-              <Label htmlFor="repeatable">Repeatable</Label>
+              <Label>Repeatable</Label>
               <div className="flex items-center gap-3 pt-1.5">
-                <input
-                  id="repeatable"
-                  type="checkbox"
-                  checked={isRepeatable}
-                  onChange={(e) => setIsRepeatable(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={isRepeatable}
+                  onClick={() => setIsRepeatable((v) => !v)}
+                  className="relative flex-shrink-0 w-9 h-5 rounded-full border-none cursor-pointer transition-colors duration-200"
+                  style={{ background: isRepeatable ? "hsl(var(--foreground))" : "hsl(var(--muted))" }}
+                >
+                  <span
+                    className="absolute top-[3px] w-3.5 h-3.5 rounded-full transition-all duration-200"
+                    style={{
+                      left: isRepeatable ? 19 : 3,
+                      background: isRepeatable ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                    }}
+                  />
+                </button>
                 {isRepeatable && (
                   <Input
                     type="number"

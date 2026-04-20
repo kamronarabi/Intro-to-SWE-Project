@@ -37,7 +37,9 @@ export async function updateSession(request: NextRequest) {
 
   // Public routes that don't require auth
   const isPublicRoute =
-    pathname === "/" || pathname.startsWith("/api/seed");
+    pathname === "/" ||
+    pathname.startsWith("/auth/") ||
+    pathname.startsWith("/api/seed");
 
   if (!user && !isPublicRoute) {
     // Not logged in and trying to access protected route -> redirect to home

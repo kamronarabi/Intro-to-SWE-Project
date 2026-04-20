@@ -23,17 +23,15 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onComplete, onDiscard, isLoading }: TaskCardProps) {
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{task.title}</CardTitle>
-          <Badge variant="secondary" className="text-sm">
-            +{task.xp_value} XP
-          </Badge>
+    <Card className="w-full h-full flex flex-col overflow-visible">
+      <CardHeader className="pb-0">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-sm font-semibold leading-snug">{task.title}</CardTitle>
+          <span className="shrink-0 border border-border text-muted-foreground rounded-md px-1.5 py-0.5 text-[11px] font-medium font-mono">+{task.xp_value} XP</span>
         </div>
-        <CardDescription>{task.description}</CardDescription>
+        <CardDescription className="text-xs leading-relaxed">{task.description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="py-2">
         {task.is_repeatable && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Repeat className="h-3 w-3" />
@@ -41,13 +39,14 @@ export function TaskCard({ task, onComplete, onDiscard, isLoading }: TaskCardPro
           </div>
         )}
       </CardContent>
-      <CardFooter className="gap-2">
+      <CardFooter className="gap-2 mt-auto">
         <Button
           onClick={onComplete}
           disabled={isLoading}
-          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+          size="sm"
+          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
         >
-          <Check className="h-4 w-4" />
+          <Check className="h-3.5 w-3.5" />
           Complete
         </Button>
         <Button
@@ -55,8 +54,9 @@ export function TaskCard({ task, onComplete, onDiscard, isLoading }: TaskCardPro
           onClick={onDiscard}
           disabled={isLoading}
           size="icon"
+          className="h-8 w-8"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5" />
         </Button>
       </CardFooter>
     </Card>

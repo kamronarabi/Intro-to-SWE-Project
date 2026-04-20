@@ -14,9 +14,10 @@ interface Profile {
 interface LeaderboardProps {
   currentUserId: string;
   currentUserXp?: number;
+  limit?: number;
 }
 
-export function Leaderboard({ currentUserId, currentUserXp }: LeaderboardProps) {
+export function Leaderboard({ currentUserId, currentUserXp, limit }: LeaderboardProps) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const supabase = createClient();
 
@@ -99,7 +100,7 @@ export function Leaderboard({ currentUserId, currentUserXp }: LeaderboardProps) 
           <p className="text-sm text-muted-foreground">No students yet.</p>
         ) : (
           <div className="space-y-2">
-            {profiles.map((profile, index) => (
+            {profiles.slice(0, limit ?? profiles.length).map((profile, index) => (
               <div
                 key={profile.id}
                 className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${

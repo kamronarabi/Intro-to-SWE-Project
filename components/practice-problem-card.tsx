@@ -32,13 +32,13 @@ interface PracticeProblemCardProps {
 const getDifficultyColor = (difficulty: string) => {
   switch (difficulty) {
     case "Easy":
-      return "bg-green-100 text-green-800";
+      return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
     case "Medium":
-      return "bg-yellow-100 text-yellow-800";
+      return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
     case "Hard":
-      return "bg-red-100 text-red-800";
+      return "bg-red-500/10 text-red-400 border border-red-500/20";
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-secondary text-secondary-foreground";
   }
 };
 
@@ -93,8 +93,8 @@ export function PracticeProblemCard({ problem }: PracticeProblemCardProps) {
       <Card
         className={`cursor-pointer transition-all h-full ${
           isSolutionLogged
-            ? "bg-gray-50 opacity-60 hover:shadow-md border-gray-300"
-            : "hover:shadow-lg"
+            ? "opacity-60 hover:shadow-md"
+            : "hover:shadow-md hover:border-foreground/20"
         }`}
         onClick={() => setIsOpen(true)}
       >
@@ -105,8 +105,8 @@ export function PracticeProblemCard({ problem }: PracticeProblemCardProps) {
                 <CardTitle className="text-base">{problem.title}</CardTitle>
                 {isSolutionLogged && (
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-green-600 text-white text-xs">Logged</Badge>
-                    <div className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                    <Badge className="bg-foreground text-background text-xs">Logged</Badge>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
                       <FileCode className="h-3 w-3" />
                       <span className="truncate max-w-[150px]" title={loggedFileName || ""}>{loggedFileName}</span>
                     </div>
@@ -173,11 +173,11 @@ export function PracticeProblemCard({ problem }: PracticeProblemCardProps) {
                 onClick={handleLogSolution}
                 className={`${
                   uploadSuccess
-                    ? "bg-green-600 hover:bg-green-700"
+                    ? "bg-emerald-600 hover:bg-emerald-700"
                     : isSolutionLogged
-                    ? "bg-gray-500 hover:bg-gray-600"
-                    : "bg-blue-600 hover:bg-blue-700"
-                } text-white`}
+                    ? "bg-muted text-muted-foreground hover:bg-muted/80"
+                    : "bg-primary hover:bg-primary/90"
+                } text-primary-foreground`}
               >
                 {uploadSuccess ? (
                   <>
