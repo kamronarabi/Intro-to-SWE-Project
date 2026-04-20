@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, X, Repeat } from "lucide-react";
 
@@ -12,6 +11,7 @@ export interface Task {
   xp_value: number;
   is_repeatable: boolean;
   max_completions: number;
+  company_name?: string | null;
 }
 
 interface TaskCardProps {
@@ -30,6 +30,11 @@ export function TaskCard({ task, onComplete, onDiscard, isLoading }: TaskCardPro
           <span className="shrink-0 border border-border text-muted-foreground rounded-md px-1.5 py-0.5 text-[11px] font-medium font-mono">+{task.xp_value} XP</span>
         </div>
         <CardDescription className="text-xs leading-relaxed">{task.description}</CardDescription>
+        {task.company_name && (
+          <span className="inline-block mt-1.5 text-[10px] text-muted-foreground border border-border rounded-full px-2 py-0.5">
+            Sponsored by {task.company_name}
+          </span>
+        )}
       </CardHeader>
       <CardContent className="py-2">
         {task.is_repeatable && (

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SignOutButton } from "@/components/sign-out-button";
 import { TaskComposer } from "@/components/task-composer";
 import { AdminLeaderboard } from "@/components/admin-leaderboard";
+import { ShortlistSection } from "@/components/shortlist-section";
 
 export default function AdminPage() {
   const supabase = createClient();
@@ -63,10 +64,16 @@ export default function AdminPage() {
               <TaskComposer />
             </div>
 
-            {/* Right: Admin Leaderboard */}
-            <div>
-              <h2 className="mb-4 text-base font-semibold">Students</h2>
-              {userId && <AdminLeaderboard currentUserId={userId} />}
+            {/* Right: Admin Leaderboard + Shortlist */}
+            <div className="flex flex-col gap-8">
+              <div>
+                <h2 className="mb-4 text-base font-semibold">Students</h2>
+                {userId && <AdminLeaderboard currentUserId={userId} />}
+              </div>
+              <div>
+                <h2 className="mb-4 text-base font-semibold">Shortlist</h2>
+                <ShortlistSection />
+              </div>
             </div>
           </div>
         </div>
