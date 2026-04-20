@@ -33,33 +33,42 @@ export default function AdminPage() {
   }, []);
 
   return (
-    <div className="min-h-svh bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              {userName ? `Administrator: ${userName}` : "Admin Dashboard"}
-            </p>
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 h-16">
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-bold">LevelUp</span>
+            <span className="text-xs text-muted-foreground font-normal">Admin Dashboard</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+              <span className="hidden sm:inline">{userName || "Admin"}</span>
+            </div>
+            <SignOutButton />
           </div>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Left: Task Composer */}
-          <section className="w-full lg:w-1/3">
-            <h2 className="mb-4 text-lg font-semibold">Create Tasks</h2>
-            <TaskComposer />
-          </section>
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-7xl px-6 py-10">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr]">
+            {/* Left: Task Composer */}
+            <div>
+              <h2 className="mb-4 text-base font-semibold">Create Tasks</h2>
+              <TaskComposer />
+            </div>
 
-          {/* Right: Admin Leaderboard */}
-          <section className="w-full lg:w-2/3">
-            <h2 className="mb-4 text-lg font-semibold">Students</h2>
-            {userId && <AdminLeaderboard currentUserId={userId} />}
-          </section>
+            {/* Right: Admin Leaderboard */}
+            <div>
+              <h2 className="mb-4 text-base font-semibold">Students</h2>
+              {userId && <AdminLeaderboard currentUserId={userId} />}
+            </div>
+          </div>
         </div>
       </main>
     </div>

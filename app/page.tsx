@@ -27,7 +27,7 @@ export default function Home() {
               <div className="flex flex-col items-center gap-3">
                 <h1 className="text-8xl font-bold">LevelUp</h1>
                 <p className="text-4xl text-muted-foreground">
-                  A platform to help actually land a job.
+                  A platform to actually help you land a job.
                 </p>
               </div>
               <div className="flex gap-4">
