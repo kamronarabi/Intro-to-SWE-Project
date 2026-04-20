@@ -9,6 +9,7 @@ import { LeaderboardWidget } from "@/components/leaderboard-widget";
 import { ApplicationTrackerWidget } from "@/components/application-tracker-widget";
 import { useUser } from "@/components/user-context";
 import { useToaster } from "@/components/providers";
+import { RecruiterInterestBanner } from "@/components/recruiter-interest-banner";
 
 interface StudentTask {
   id: string;
@@ -32,8 +33,14 @@ export default function StudentPage() {
     setIsLoading(true);
     setNoTasksLeft(false);
 
-    const { data: allTasks } = await supabase.from("tasks").select("*");
-    if (!allTasks || allTasks.length === 0) {
+    const { data: rawTasks } = await supabase
+      .from("tasks")
+      .select("*, companies(name)");
+    const allTasks = (rawTasks || []).map((t) => ({
+      ...t,
+      company_name: (t.companies as { name: string } | null)?.name ?? null,
+    }));
+    if (allTasks.length === 0) {
       setTasks([]);
       setNoTasksLeft(true);
       setIsLoading(false);
@@ -145,6 +152,7 @@ export default function StudentPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
+      <RecruiterInterestBanner />
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_380px]">
         {/* Main column */}
         <div className="flex flex-col gap-8">

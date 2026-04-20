@@ -47,63 +47,132 @@ export async function GET() {
     });
   }
 
-  // Check if profile already exists
+  // Create test company if it doesn't exist
+  let companyId: string;
+  const { data: existingCompany } = await supabase
+    .from("companies")
+    .select("id")
+    .eq("name", "Acme Corp")
+    .single();
+
+  if (existingCompany) {
+    companyId = existingCompany.id;
+  } else {
+    const { data: newCompany, error: companyError } = await supabase
+      .from("companies")
+      .insert({ name: "Acme Corp" })
+      .select("id")
+      .single();
+    if (companyError) {
+      return NextResponse.json({ error: companyError.message }, { status: 500 });
+    }
+    companyId = newCompany.id;
+  }
+
+  // --- Admin setup ---
+  let adminCreated = false;
   const { data: existingProfile } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, company_id")
     .eq("email", ADMIN_EMAIL)
     .single();
 
   if (existingProfile) {
-    return NextResponse.json({
-      message: "Admin account already exists",
-      migrations: migrationResult,
+    if (!existingProfile.company_id) {
+      await supabase
+        .from("profiles")
+        .update({ company_id: companyId })
+        .eq("id", existingProfile.id);
+    }
+  } else {
+    const { data: userList } = await supabase.auth.admin.listUsers();
+    const existingUser = userList?.users?.find((u) => u.email === ADMIN_EMAIL);
+
+    let userId: string;
+    if (existingUser) {
+      userId = existingUser.id;
+    } else {
+      const { data: authData, error: authError } =
+        await supabase.auth.admin.createUser({
+          email: ADMIN_EMAIL,
+          password: ADMIN_PASSWORD,
+          email_confirm: true,
+        });
+      if (authError) {
+        return NextResponse.json({ error: authError.message }, { status: 500 });
+      }
+      userId = authData.user.id;
+    }
+
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: userId,
+      name: ADMIN_NAME,
+      email: ADMIN_EMAIL,
+      role: "admin",
+      xp: 0,
+      company_id: companyId,
     });
+
+    if (profileError) {
+      return NextResponse.json({ error: profileError.message }, { status: 500 });
+    }
+    adminCreated = true;
   }
 
-  // Check if the auth user already exists (e.g. from a previous failed seed)
+  // --- Mock students ---
+  const MOCK_STUDENTS = [
+    { name: "David Chen", email: "david.chen@ufl.edu", xp: 340 },
+    { name: "Kamron Arabi", email: "kamron.arabi@ufl.edu", xp: 215 },
+    { name: "Daniel Hoffman", email: "daniel.hoffman@ufl.edu", xp: 180 },
+    { name: "Jake Qiu", email: "jake.qiu@ufl.edu", xp: 95 },
+  ];
+
+  const studentsSeeded: string[] = [];
   const { data: userList } = await supabase.auth.admin.listUsers();
-  const existingUser = userList?.users?.find((u) => u.email === ADMIN_EMAIL);
 
-  let userId: string;
+  for (const student of MOCK_STUDENTS) {
+    const { data: existingStudentProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", student.email)
+      .single();
 
-  if (existingUser) {
-    userId = existingUser.id;
-  } else {
-    // Create the auth user
-    const { data: authData, error: authError } =
+    if (existingStudentProfile) continue;
+
+    const existingAuthUser = userList?.users?.find((u) => u.email === student.email);
+    if (existingAuthUser) {
+      await supabase
+        .from("profiles")
+        .update({ name: student.name, xp: student.xp })
+        .eq("id", existingAuthUser.id);
+      studentsSeeded.push(student.email);
+      continue;
+    }
+
+    const { data: newUser, error: studentAuthError } =
       await supabase.auth.admin.createUser({
-        email: ADMIN_EMAIL,
-        password: ADMIN_PASSWORD,
+        email: student.email,
+        password: "1234",
         email_confirm: true,
+        user_metadata: { name: student.name, role: "student" },
       });
 
-    if (authError) {
-      return NextResponse.json({ error: authError.message }, { status: 500 });
-    }
-    userId = authData.user.id;
-  }
+    if (studentAuthError || !newUser) continue;
 
-  // Create the profile
-  const { error: profileError } = await supabase.from("profiles").insert({
-    id: userId,
-    name: ADMIN_NAME,
-    email: ADMIN_EMAIL,
-    role: "admin",
-    xp: 0,
-  });
+    await supabase
+      .from("profiles")
+      .update({ xp: student.xp })
+      .eq("id", newUser.user.id);
 
-  if (profileError) {
-    return NextResponse.json(
-      { error: profileError.message },
-      { status: 500 },
-    );
+    studentsSeeded.push(student.email);
   }
 
   return NextResponse.json({
-    message: "Test admin created and migrations applied",
+    message: adminCreated ? "Test admin created and migrations applied" : "Admin already existed",
     email: ADMIN_EMAIL,
     password: ADMIN_PASSWORD,
+    company: "Acme Corp",
+    students_seeded: studentsSeeded,
     migrations: migrationResult,
   });
 }

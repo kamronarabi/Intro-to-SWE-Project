@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
+import { useToaster } from "@/components/providers";
 
 export function TaskComposer({ onTaskCreated }: { onTaskCreated?: () => void }) {
   const supabase = createClient();
+  const toaster = useToaster();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [xpValue, setXpValue] = useState(25);
@@ -26,12 +28,24 @@ export function TaskComposer({ onTaskCreated }: { onTaskCreated?: () => void }) 
     setIsSubmitting(true);
     setError("");
 
+    const { data: { user } } = await supabase.auth.getUser();
+    let companyId: string | null = null;
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", user.id)
+        .single();
+      companyId = profile?.company_id ?? null;
+    }
+
     const { error: insertError } = await supabase.from("tasks").insert({
       title: title.trim(),
       description: description.trim(),
       xp_value: xpValue,
       is_repeatable: isRepeatable,
       max_completions: isRepeatable ? maxCompletions : 1,
+      ...(companyId ? { company_id: companyId } : {}),
     });
 
     if (insertError) {
@@ -40,6 +54,7 @@ export function TaskComposer({ onTaskCreated }: { onTaskCreated?: () => void }) 
       return;
     }
 
+    const createdTitle = title.trim();
     // Reset form
     setTitle("");
     setDescription("");
@@ -47,6 +62,11 @@ export function TaskComposer({ onTaskCreated }: { onTaskCreated?: () => void }) 
     setIsRepeatable(false);
     setMaxCompletions(1);
     setIsSubmitting(false);
+    toaster.current?.show({
+      title: "Task Created",
+      message: `"${createdTitle}" is now live for students.`,
+      variant: "success",
+    });
     onTaskCreated?.();
   }
 
@@ -79,6 +99,7 @@ export function TaskComposer({ onTaskCreated }: { onTaskCreated?: () => void }) 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
+              className="min-h-[125px]"
             />
           </div>
 
