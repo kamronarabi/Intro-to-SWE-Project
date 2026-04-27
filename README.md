@@ -123,3 +123,4 @@ Use the **Sign Up** tab on the home page to register a new student account. The 
 - [Supabase](https://supabase.com/) — Authentication, database & Realtime
 - [Tailwind CSS](https://tailwindcss.com/) — Styling
 - [shadcn/ui](https://ui.shadcn.com/) — UI components
+
